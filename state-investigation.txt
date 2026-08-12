@@ -1,0 +1,33 @@
+Terraform State Investigation
+
+Resources tracked by Terraform:
+1. aws_security_group.web_sg
+2. module.web_server.aws_instance.this
+
+Security Group:
+Name: terraform-webserver-sg
+ID: sg-0b03b5bf6a1be85d7
+VPC: vpc-0c4cc12d6e2c089f5
+Inbound Rule:
+- TCP port 80
+- Source: 0.0.0.0/0
+
+Outbound Rule:
+- All traffic allowed
+
+EC2 Instance:
+Instance ID: i-0d93518a8f7e6dd39
+Instance Type: t3.micro
+State: running
+Availability Zone: us-east-1c
+Public IP: 54.198.248.198
+Private IP: 172.31.22.174
+Public DNS: ec2-54-198-248-198.compute-1.amazonaws.com
+Security Group: terraform-webserver-sg
+Root Volume Size: 8 GB
+Root Volume Type: gp3
+
+Observations:
+Terraform state stores information about the AWS resources that Terraform manages.
+It keeps the relationship between the Terraform configuration and the actual AWS resources.
+The state allows Terraform to determine what resources already exist and what changes are needed during future plan or apply operations.

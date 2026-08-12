@@ -1,0 +1,14 @@
+terraform version
+aws sts get-caller-identity
+terraform fmt -recursive
+terraform init
+terraform validate
+terraform plan
+terraform apply
+terraform output
+terraform output -raw website_url
+terraform state list
+terraform state show aws_security_group.web_sg
+terraform state show module.web_server.aws_instance.this
+terraform show
+terraform destroy
