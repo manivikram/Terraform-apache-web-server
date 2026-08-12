@@ -17,38 +17,14 @@ data "aws_ami" "ubuntu" {
   }
 }
 
-resource "aws_security_group" "web_sg" {
-  name        = "${var.instance_name}-sg"
-  description = "Allow HTTP access to Terraform web server"
-  vpc_id      = data.aws_vpc.default.id
-
-  ingress {
-    description = "Allow HTTP"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = [var.allowed_cidr]
-  }
-
-  egress {
-    description = "Allow all outbound traffic"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "${var.instance_name}-sg"
-  }
-}
-
 module "web_server" {
-  source = "./modules/ec2"
+  source = "./modules/ec2_web_server"
 
-  ami_id            = data.aws_ami.ubuntu.id
-  instance_type     = var.instance_type
-  instance_name     = var.instance_name
-  security_group_id = aws_security_group.web_sg.id
-  user_data         = file("${path.module}/user_data.sh")
+  ami_id          = data.aws_ami.ubuntu.id
+  instance_type   = var.instance_type
+  instance_name   = var.instance_name
+  vpc_id          = data.aws_vpc.default.id
+  allowed_cidr    = var.allowed_cidr
+  webpage_title   = var.webpage_title
+  webpage_message = var.webpage_message
 }

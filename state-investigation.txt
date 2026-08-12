@@ -1,33 +1,168 @@
-Terraform State Investigation
+TERRAFORM STATE INVESTIGATION
+=============================
 
-Resources tracked by Terraform:
-1. aws_security_group.web_sg
-2. module.web_server.aws_instance.this
+Project: Terraform Apache Web Server
+Region: us-east-1
 
-Security Group:
-Name: terraform-webserver-sg
-ID: sg-0b03b5bf6a1be85d7
-VPC: vpc-0c4cc12d6e2c089f5
-Inbound Rule:
-- TCP port 80
-- Source: 0.0.0.0/0
+Purpose
+-------
+Terraform state keeps track of the relationship between the Terraform
+configuration and the actual resources created in AWS.
 
-Outbound Rule:
-- All traffic allowed
+1. List Resources Managed by Terraform
+---------------------------------------
 
-EC2 Instance:
-Instance ID: i-0d93518a8f7e6dd39
+Command:
+
+terraform state list
+
+Expected resources:
+
+module.web_server.aws_instance.web
+module.web_server.aws_security_group.web
+
+The EC2 instance and Security Group are both managed inside the reusable
+ec2_web_server Terraform module.
+
+
+2. Inspect EC2 Instance State
+-----------------------------
+
+Command:
+
+terraform state show module.web_server.aws_instance.web
+
+Deployed EC2 information:
+
+Instance ID: i-0761149d8c537375f
 Instance Type: t3.micro
-State: running
 Availability Zone: us-east-1c
-Public IP: 54.198.248.198
-Private IP: 172.31.22.174
-Public DNS: ec2-54-198-248-198.compute-1.amazonaws.com
-Security Group: terraform-webserver-sg
-Root Volume Size: 8 GB
-Root Volume Type: gp3
+Public IP: 52.23.198.226
+Public DNS: ec2-52-23-198-226.compute-1.amazonaws.com
 
-Observations:
-Terraform state stores information about the AWS resources that Terraform manages.
-It keeps the relationship between the Terraform configuration and the actual AWS resources.
-The state allows Terraform to determine what resources already exist and what changes are needed during future plan or apply operations.
+The EC2 instance is managed by:
+
+module.web_server.aws_instance.web
+
+The instance uses EC2 user data to automatically install Apache and create
+the custom webpage during startup.
+
+
+3. EC2 Security Configuration
+------------------------------
+
+The Terraform state shows that the EC2 instance uses:
+
+IMDSv2:
+http_tokens = "required"
+
+Root EBS Volume:
+encrypted = true
+volume_type = "gp3"
+
+These settings improve the security of the EC2 instance.
+
+
+4. Inspect Security Group State
+-------------------------------
+
+Command:
+
+terraform state show module.web_server.aws_security_group.web
+
+Security Group ID:
+
+sg-02b1a0ebcec592855
+
+The Security Group allows:
+
+Inbound:
+TCP port 80 from 0.0.0.0/0
+
+Outbound:
+All outbound traffic
+
+This allows users to access the Apache webpage over HTTP.
+
+
+5. Terraform Outputs
+--------------------
+
+Command:
+
+terraform output
+
+Outputs from the deployment:
+
+availability_zone = "us-east-1c"
+instance_id = "i-0761149d8c537375f"
+public_dns = "ec2-52-23-198-226.compute-1.amazonaws.com"
+public_ip = "52.23.198.226"
+security_group_id = "sg-02b1a0ebcec592855"
+website_url = "http://52.23.198.226"
+
+
+6. Verify Web Server
+--------------------
+
+Command:
+
+curl http://52.23.198.226
+
+The command returned the custom HTML page, confirming that:
+
+- The EC2 instance was running.
+- The Security Group allowed HTTP traffic.
+- The user-data template executed successfully.
+- Apache was installed and started.
+- The custom webpage was deployed successfully.
+
+
+7. Terraform State File
+-----------------------
+
+Terraform stores information about the deployed infrastructure in:
+
+terraform.tfstate
+
+The state file should not be committed to Git because it can contain
+infrastructure details and potentially sensitive information.
+
+The .gitignore file excludes:
+
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+
+
+8. Destroy Resources
+--------------------
+
+After testing the infrastructure, resources can be removed using:
+
+terraform destroy
+
+Terraform uses the state file to determine which AWS resources belong
+to this configuration and removes them.
+
+After destruction, the following command can be used to verify that no
+managed resources remain:
+
+terraform state list
+
+
+Conclusion
+----------
+
+Terraform successfully created and tracked an Apache web server using a
+reusable Terraform module.
+
+The reusable module manages both:
+
+- AWS Security Group
+- AWS EC2 instance
+
+The deployment also uses an encrypted gp3 root volume, IMDSv2, automated
+Apache installation, configurable webpage content, Terraform variables,
+and Terraform outputs.

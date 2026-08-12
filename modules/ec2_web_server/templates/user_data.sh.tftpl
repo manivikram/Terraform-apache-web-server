@@ -1,0 +1,21 @@
+#!/bin/bash
+
+apt-get update -y
+apt-get install -y apache2
+
+cat > /var/www/html/index.html <<'HTML'
+<!DOCTYPE html>
+<html>
+<head>
+    <title>${webpage_title}</title>
+</head>
+<body>
+    <h1>${webpage_title}</h1>
+    <p>${webpage_message}</p>
+    <p>This server was created automatically using Terraform.</p>
+</body>
+</html>
+HTML
+
+systemctl enable apache2
+systemctl restart apache2

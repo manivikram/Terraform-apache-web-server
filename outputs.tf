@@ -13,6 +13,16 @@ output "public_dns" {
   value       = module.web_server.public_dns
 }
 
+output "security_group_id" {
+  description = "Security group ID"
+  value       = module.web_server.security_group_id
+}
+
+output "availability_zone" {
+  description = "EC2 availability zone"
+  value       = module.web_server.availability_zone
+}
+
 output "website_url" {
   description = "Apache website URL"
   value       = "http://${module.web_server.public_ip}"
